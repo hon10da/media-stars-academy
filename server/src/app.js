@@ -29,6 +29,7 @@ import adminGalleryRoutes from './routes/admin/gallery.routes.js'
 
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js'
 import { apiSuccess } from './utils/apiResponse.js'
+import { connectDB } from './config/db.js'
 
 const app = express()
 
@@ -61,8 +62,23 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'))
 }
 
-// Health check
+// Health check — intentionally registered BEFORE the DB-connection middleware
+// below, so it remains a pure liveness check that responds even if MongoDB
+// is temporarily unreachable (standard practice for health endpoints).
 app.get('/api/health', (req, res) => apiSuccess(res, { message: 'Media Stars Academy API is running.' }))
+
+// Ensures a MongoDB connection exists before any route handler below this
+// point runs. Critical for serverless deployments (e.g. Vercel): the
+// connection must be established as part of the request lifecycle itself,
+// since server.js's app.listen()-based bootstrap (used for local
+// development) never executes in a serverless function. Safe and cheap to
+// call on every request — once connected, connectDB() short-circuits
+// immediately (see config/db.js).
+app.use((req, res, next) => {
+  connectDB()
+    .then(() => next())
+    .catch((err) => next(err))
+})
 
 // Public routes
 app.use('/api/programs', publicProgramsRoutes)
