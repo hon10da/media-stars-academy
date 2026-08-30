@@ -9,13 +9,17 @@ export async function connectDB() {
   }
 
   try {
+    console.log('MongoDB: attempting connection...')
+
     await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 10000,
     })
 
-    console.log('MongoDB connected successfully')
+    console.log('MongoDB: connected successfully')
+    console.log('MongoDB readyState:', mongoose.connection.readyState)
   } catch (error) {
-    console.error('MongoDB connection failed:', error.message)
+    console.error('MongoDB connection failed')
+    console.error('MongoDB error:', error.message)
     throw error
   }
 }
