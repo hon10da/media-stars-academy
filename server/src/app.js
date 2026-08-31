@@ -32,6 +32,7 @@ import { apiSuccess } from './utils/apiResponse.js'
 import { connectDB } from './config/db.js'
 
 const app = express()
+app.set('trust proxy', 1)
 
 // Security & parsing middleware
 app.use(helmet())

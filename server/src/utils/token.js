@@ -1,7 +1,16 @@
 import jwt from 'jsonwebtoken'
 
 const COOKIE_NAME = 'msa_admin_token'
-const isProd = process.env.NODE_ENV === 'production'
+
+// Detect "production/cross-origin deployment" robustly. process.env.VERCEL
+// is a system environment variable Vercel automatically injects into every
+// serverless invocation (no manual configuration needed), so this doesn't
+// depend on NODE_ENV being explicitly set correctly in the Vercel dashboard
+// — which is easy to forget and was the actual root cause of admin auth
+// silently failing in production (cookie sent with SameSite=Lax instead of
+// None, so the browser refused to attach it to cross-site API requests
+// between the frontend and backend Vercel subdomains).
+const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1'
 
 export function generateToken(payload) {
   const secret = process.env.JWT_SECRET
